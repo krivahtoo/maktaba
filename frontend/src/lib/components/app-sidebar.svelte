@@ -37,7 +37,7 @@
   ];
 </script>
 
-<Sidebar.Root variant="floating">
+<Sidebar.Root variant="floating" collapsible="icon">
   <Sidebar.Content>
     <Sidebar.Group>
       <Sidebar.GroupLabel>Application</Sidebar.GroupLabel>
