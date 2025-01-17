@@ -27,44 +27,44 @@ import { createTable } from '@tanstack/table-core';
  * ```
  */
 export function createSvelteTable(options) {
-	const resolvedOptions = mergeObjects(
-		{
-			state: {},
-			onStateChange() {},
-			renderFallbackValue: null,
-			mergeOptions: (defaultOptions, options) => {
-				return mergeObjects(defaultOptions, options);
-			}
-		},
-		options
-	);
+  const resolvedOptions = mergeObjects(
+    {
+      state: {},
+      onStateChange() {},
+      renderFallbackValue: null,
+      mergeOptions: (defaultOptions, options) => {
+        return mergeObjects(defaultOptions, options);
+      }
+    },
+    options
+  );
 
-	const table = createTable(resolvedOptions);
-	let state = $state(table.initialState);
+  const table = createTable(resolvedOptions);
+  let state = $state(table.initialState);
 
-	function updateOptions() {
-		table.setOptions((prev) => {
-			return mergeObjects(prev, options, {
-				state: mergeObjects(state, options.state || {}),
+  function updateOptions() {
+    table.setOptions((prev) => {
+      return mergeObjects(prev, options, {
+        state: mergeObjects(state, options.state || {}),
 
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				onStateChange: (updater) => {
-					if (updater instanceof Function) state = updater(state);
-					else state = mergeObjects(state, updater);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onStateChange: (updater) => {
+          if (updater instanceof Function) state = updater(state);
+          else state = mergeObjects(state, updater);
 
-					options.onStateChange?.(updater);
-				}
-			});
-		});
-	}
+          options.onStateChange?.(updater);
+        }
+      });
+    });
+  }
 
-	updateOptions();
+  updateOptions();
 
-	$effect.pre(() => {
-		updateOptions();
-	});
+  $effect.pre(() => {
+    updateOptions();
+  });
 
-	return table;
+  return table;
 }
 
 /**
@@ -74,27 +74,27 @@ export function createSvelteTable(options) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mergeObjects(...sources) {
-	const target = {};
-	for (let i = 0; i < sources.length; i++) {
-		let source = sources[i];
-		if (typeof source === 'function') source = source();
-		if (source) {
-			const descriptors = Object.getOwnPropertyDescriptors(source);
-			for (const key in descriptors) {
-				if (key in target) continue;
-				Object.defineProperty(target, key, {
-					enumerable: true,
-					get() {
-						for (let i = sources.length - 1; i >= 0; i--) {
-							let s = sources[i];
-							if (typeof s === 'function') s = s();
-							const v = (s || {})[key];
-							if (v !== undefined) return v;
-						}
-					}
-				});
-			}
-		}
-	}
-	return target;
+  const target = {};
+  for (let i = 0; i < sources.length; i++) {
+    let source = sources[i];
+    if (typeof source === 'function') source = source();
+    if (source) {
+      const descriptors = Object.getOwnPropertyDescriptors(source);
+      for (const key in descriptors) {
+        if (key in target) continue;
+        Object.defineProperty(target, key, {
+          enumerable: true,
+          get() {
+            for (let i = sources.length - 1; i >= 0; i--) {
+              let s = sources[i];
+              if (typeof s === 'function') s = s();
+              const v = (s || {})[key];
+              if (v !== undefined) return v;
+            }
+          }
+        });
+      }
+    }
+  }
+  return target;
 }

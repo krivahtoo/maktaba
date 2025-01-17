@@ -15,12 +15,12 @@
  * ```
  */
 export class RenderComponentConfig {
-	component;
-	props;
-	constructor(component, props = {}) {
-		this.component = component;
-		this.props = props;
-	}
+  component;
+  props;
+  constructor(component, props = {}) {
+    this.component = component;
+    this.props = props;
+  }
 }
 
 /**
@@ -39,12 +39,12 @@ export class RenderComponentConfig {
  * ```
  */
 export class RenderSnippetConfig {
-	snippet;
-	params;
-	constructor(snippet, params) {
-		this.snippet = snippet;
-		this.params = params;
-	}
+  snippet;
+  params;
+  constructor(snippet, params) {
+    this.snippet = snippet;
+    this.params = params;
+  }
 }
 
 /**
@@ -70,7 +70,7 @@ export class RenderSnippetConfig {
  * @see {@link https://tanstack.com/table/latest/docs/guide/column-defs}
  */
 export function renderComponent(component, props) {
-	return new RenderComponentConfig(component, props);
+  return new RenderComponentConfig(component, props);
 }
 
 /**
@@ -98,5 +98,5 @@ export function renderComponent(component, props) {
  * @see {@link https://tanstack.com/table/latest/docs/guide/column-defs}
  */
 export function renderSnippet(snippet, params) {
-	return new RenderSnippetConfig(snippet, params);
+  return new RenderSnippetConfig(snippet, params);
 }

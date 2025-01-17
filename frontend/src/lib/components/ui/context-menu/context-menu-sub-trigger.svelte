@@ -1,20 +1,20 @@
 <script>
-	import { ContextMenu as ContextMenuPrimitive } from 'bits-ui';
-	import ChevronRight from 'lucide-svelte/icons/chevron-right';
-	import { cn } from '$lib/utils.js';
+  import { ContextMenu as ContextMenuPrimitive } from 'bits-ui';
+  import ChevronRight from 'lucide-svelte/icons/chevron-right';
+  import { cn } from '$lib/utils.js';
 
-	let { ref = $bindable(null), class: className, inset, children, ...restProps } = $props();
+  let { ref = $bindable(null), class: className, inset, children, ...restProps } = $props();
 </script>
 
 <ContextMenuPrimitive.SubTrigger
-	bind:ref
-	class={cn(
-		'flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[state=open]:bg-accent data-[highlighted]:text-accent-foreground data-[state=open]:text-accent-foreground',
-		inset && 'pl-8',
-		className
-	)}
-	{...restProps}
+  bind:ref
+  class={cn(
+    'flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent data-[state=open]:bg-accent data-[highlighted]:text-accent-foreground data-[state=open]:text-accent-foreground',
+    inset && 'pl-8',
+    className
+  )}
+  {...restProps}
 >
-	{@render children?.()}
-	<ChevronRight class="ml-auto size-4" />
+  {@render children?.()}
+  <ChevronRight class="ml-auto size-4" />
 </ContextMenuPrimitive.SubTrigger>
