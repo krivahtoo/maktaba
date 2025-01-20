@@ -25,7 +25,15 @@ export const registerSchema = z
       .string()
       .min(2, {
         message: 'Name must contain at least 2 characters'
-      }).max(255),
+      })
+      .max(255),
+    image: z
+      .instanceof(File, { message: 'Please upload a file.' })
+      .refine((f) => f.size < 2_000_000, 'Max 2 MB upload size.')
+      .refine(
+        (f) => f.type === 'image/jpeg' || f.type === 'image/png',
+        'Only JPEG or PNG files are allowed.'
+      ),
     username: z
       .string()
       .min(2, {
