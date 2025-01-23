@@ -31,6 +31,8 @@ async fn main() -> Result<()> {
     let pool = SqlitePool::connect("sqlite://:memory:").await?;
     let jwt_secret = std::env::var("JWT_SECRET").unwrap_or("secret".to_string());
 
+    sqlx::migrate!().run(&pool).await?;
+
     // build our application with a route
     let app = Router::new()
         .merge(routes::routes(Arc::new(AppStateInner { pool, jwt_secret })))
