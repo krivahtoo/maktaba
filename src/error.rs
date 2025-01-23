@@ -8,6 +8,8 @@ pub enum Error {
     Io(#[from] io::Error),
     #[error(transparent)]
     Sqlx(#[from] sqlx::Error),
+    #[error(transparent)]
+    SqlxMigration(#[from] sqlx::migrate::MigrateError),
     #[error("{0}")]
     Argon2(String),
     #[error(transparent)]

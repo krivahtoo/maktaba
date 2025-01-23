@@ -14,7 +14,9 @@ use tracing::{debug, info};
 
 use self::error::Result;
 
+mod auth;
 mod error;
+mod model;
 mod routes;
 mod state;
 
