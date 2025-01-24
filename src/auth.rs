@@ -2,10 +2,27 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use axum::{
+    extract::FromRequestParts,
+    http::{request::Parts, StatusCode},
+    response::{IntoResponse, Response},
+    RequestPartsExt,
+};
+use axum_extra::{
+    headers::{authorization::Bearer, Authorization},
+    TypedHeader,
+};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
+use tower_cookies::Cookies;
+use tracing::debug;
 
-use crate::{error::{Error, Result}, model::user::UserRole};
+use crate::{
+    error::{Error, Result},
+    extractors::json::Json,
+    model::user::UserRole,
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
@@ -13,6 +30,60 @@ pub struct Claims {
     pub user_id: i64,
     pub role: UserRole,
     pub exp: usize,
+}
+
+impl<S> FromRequestParts<S> for Claims
+where
+    S: Send + Sync,
+{
+    type Rejection = AuthError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        _state: &S,
+    ) -> core::result::Result<Self, Self::Rejection> {
+        // Extract the token from the authorization header
+        let token = match parts.extract::<TypedHeader<Authorization<Bearer>>>().await {
+            Ok(TypedHeader(Authorization(v))) => v.token().to_owned(),
+            _ => {
+                let cookies = parts
+                    .extract::<Cookies>()
+                    .await
+                    .map_err(|_| AuthError::MissingCredentials)?;
+                cookies
+                    .get("token")
+                    .map(|c| c.value().to_owned())
+                    .ok_or(AuthError::MissingCredentials)?
+            }
+        };
+        let jwt_secret = std::env::var("JWT_SECRET").unwrap_or("secret".to_string());
+        // Decode the user data
+        let claims = decode_jwt(&token, &jwt_secret).map_err(|e| {
+            debug!("{e}");
+            AuthError::InvalidToken
+        })?;
+
+        Ok(claims)
+    }
+}
+
+#[derive(Debug)]
+pub enum AuthError {
+    MissingCredentials,
+    InvalidToken,
+}
+
+impl IntoResponse for AuthError {
+    fn into_response(self) -> Response {
+        let (status, error_message) = match self {
+            AuthError::MissingCredentials => (StatusCode::FORBIDDEN, "Missing credentials"),
+            AuthError::InvalidToken => (StatusCode::FORBIDDEN, "Invalid token"),
+        };
+        let body = Json(json!({
+            "error": error_message,
+        }));
+        (status, body).into_response()
+    }
 }
 
 pub fn generate_jwt(claims: &Claims, jwt_secret: &str) -> Result<String> {

@@ -8,12 +8,14 @@ use axum::{
 use serde_json::json;
 
 use crate::{
+    auth::Claims,
     middlewares::require_role,
     model::{user::UserRole, Engine},
     state::AppState,
 };
 
 mod auth;
+mod user;
 
 // basic handler that responds with a static string
 async fn hello_world() -> Response {
@@ -23,13 +25,14 @@ async fn hello_world() -> Response {
 pub fn routes(state: AppState<Engine>) -> Router {
     let hello = Router::new()
         .route("/hello", get(hello_world))
-        .route_layer(middleware::from_fn(|req, next| {
-            require_role(UserRole::Admin, req, next)
+        .route_layer(middleware::from_fn(|claims: Claims, req, next| {
+            require_role(UserRole::Member, claims, req, next)
         }));
 
     let api_routes = Router::new()
         .merge(hello)
         .merge(auth::routes())
+        .merge(user::routes())
         .fallback(not_found);
 
     Router::new()

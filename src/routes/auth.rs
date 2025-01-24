@@ -5,6 +5,7 @@ use axum::{
     routing::post,
     Router,
 };
+use chrono::Utc;
 use serde_json::json;
 use tower_cookies::{Cookie, Cookies};
 use tracing::error;
@@ -31,11 +32,12 @@ async fn login(
     {
         match verify(&u.password, &user.password) {
             Ok(_) => {
+                let now = Utc::now().timestamp();
                 let token = generate_jwt(
                     &Claims {
                         user_id: u.id,
                         role: u.role,
-                        exp: 3600,
+                        exp: now as usize + 3600,
                     },
                     &state.jwt_secret,
                 )
@@ -44,8 +46,8 @@ async fn login(
                 (StatusCode::OK, Json(json!({ "token": token }))).into_response()
             }
             Err(_) => (
-                StatusCode::UNAUTHORIZED,
-                Json(json!({ "error": "Unauthorized" })),
+                StatusCode::BAD_REQUEST,
+                Json(json!({ "error": "Wrong username or password" })),
             )
                 .into_response(),
         }
@@ -63,11 +65,7 @@ async fn register(
     Json(user): Json<UserForCreate>,
 ) -> Response {
     match User::create(&state, user).await {
-        Ok(_) => (
-            StatusCode::CREATED,
-            json!({ "status": "Success" }).to_string(),
-        )
-            .into_response(),
+        Ok(_) => (StatusCode::CREATED, Json(json!({ "status": "Success" }))).into_response(),
         Err(e) => {
             error!("{e}");
             (

@@ -5,7 +5,7 @@ use axum::{
 use serde::{de::DeserializeOwned, Serialize};
 
 // We define our own `Path` extractor that customizes the error from `axum::extract::Path`
-pub struct Path<T>(T);
+pub struct Path<T>(pub T);
 
 impl<S, T> FromRequestParts<S> for Path<T>
 where
