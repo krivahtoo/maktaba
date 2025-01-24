@@ -1,0 +1,9 @@
+[env]
+
+# Enable logging in our app
+RUST_LOG="maktaba=debug"
+
+# Database url
+DATABASE_URL="sqlite://test.db"
+
+JWT_SECRET="my_secure_secret"

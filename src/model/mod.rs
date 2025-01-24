@@ -14,7 +14,7 @@ pub mod book;
 pub mod error;
 pub mod user;
 
-type Engine = sqlx::Sqlite;
+pub type Engine = sqlx::Sqlite;
 type Row = sqlx::sqlite::SqliteRow;
 
 #[derive(Iden)]

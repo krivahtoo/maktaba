@@ -5,6 +5,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
     Router,
 };
+use listenfd::ListenFd;
 use rust_embed::Embed;
 use sqlx::SqlitePool;
 use state::AppStateInner;
@@ -19,6 +20,8 @@ mod error;
 mod model;
 mod routes;
 mod state;
+mod extractors;
+mod middlewares;
 
 static INDEX_HTML: &str = "index.html";
 
@@ -30,7 +33,8 @@ struct Assets;
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
-    let pool = SqlitePool::connect("sqlite://:memory:").await?;
+    let db_url = std::env::var("DATABASE_URL").unwrap_or("sqlite://:memory:".to_string());
+    let pool = SqlitePool::connect(&db_url).await?;
     let jwt_secret = std::env::var("JWT_SECRET").unwrap_or("secret".to_string());
 
     sqlx::migrate!().run(&pool).await?;
@@ -43,7 +47,17 @@ async fn main() -> Result<()> {
         .layer(CookieManagerLayer::new());
 
     // run our app with hyper, listening globally on port 3000
-    let listener = TcpListener::bind("0.0.0.0:3000").await?;
+    let mut listenfd = ListenFd::from_env();
+    let listener = match listenfd.take_tcp_listener(0)? {
+        // if we are given a tcp listener on listen fd 0, we use that one
+        Some(listener) => {
+            info!("Running in dev auto reload");
+            listener.set_nonblocking(true)?;
+            TcpListener::from_std(listener)?
+        }
+        // otherwise fall back to local listening
+        None => TcpListener::bind("0.0.0.0:3000").await?,
+    };
     info!("Listening on port 3000");
     axum::serve(listener, app)
         .with_graceful_shutdown(async {

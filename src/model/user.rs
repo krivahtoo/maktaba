@@ -17,13 +17,14 @@ pub struct User {
     pub role: UserRole,
     pub username: String,
     pub password: String,
+    pub email: String,
     pub phone: Option<String>,
     pub photo: Option<String>,
     pub address: Option<String>,
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, Type)]
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize, Type)]
 #[serde(rename_all = "lowercase")]
 #[sqlx(rename_all = "lowercase")]
 pub enum UserRole {
@@ -56,6 +57,7 @@ pub struct UserForCreate {
     pub role: UserRole,
     pub username: String,
     pub password: String,
+    pub email: String,
     pub phone: Option<String>,
     pub photo: Option<String>,
     pub address: Option<String>,
@@ -69,6 +71,7 @@ pub struct UserForUpdate {
     pub username: Option<String>,
     #[serde(skip_deserializing)]
     pub password: Option<String>,
+    pub email: Option<String>,
     pub phone: Option<String>,
     pub photo: Option<String>,
     pub address: Option<String>,
