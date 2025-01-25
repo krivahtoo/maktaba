@@ -10,6 +10,7 @@ use serde_json::json;
 use crate::{middlewares::require_login, model::Engine, state::AppState};
 
 mod auth;
+mod book;
 mod user;
 
 // basic handler that responds with a hello world json
@@ -21,6 +22,7 @@ pub fn routes(state: AppState<Engine>) -> Router {
     let protected_routes = Router::new()
         .route("/hello", get(hello_world))
         .merge(user::routes())
+        .merge(book::routes())
         .route_layer(middleware::from_fn(require_login));
 
     let api_routes = Router::new()
