@@ -7,10 +7,7 @@ pub enum Error {
     #[error(transparent)]
     SeaQ(#[from] sea_query::error::Error),
     #[error("{id} not found in '{entity}'")]
-    EntityNotFound {
-        entity: &'static str,
-        id: i64,
-    },
+    EntityNotFound { entity: &'static str, id: i64 },
     #[error("Count failure")]
     CountFail,
     #[error("Error hashing password {0}")]

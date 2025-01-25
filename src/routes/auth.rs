@@ -2,7 +2,7 @@ use axum::{
     extract::State,
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::post,
+    routing::{get, post},
     Router,
 };
 use chrono::Utc;
@@ -14,7 +14,6 @@ use crate::{
     auth::{generate_jwt, verify, Claims},
     extractors::json::Json,
     model::{
-        error::Error,
         user::{User, UserForCreate, UserForLogin},
         Engine,
     },
@@ -53,8 +52,8 @@ async fn login(
         }
     } else {
         (
-            StatusCode::UNAUTHORIZED,
-            Json(json!({ "error": "Unauthorized" })),
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "error": "Wrong username or password" })),
         )
             .into_response()
     }
@@ -65,7 +64,11 @@ async fn register(
     Json(user): Json<UserForCreate>,
 ) -> Response {
     match User::create(&state, user).await {
-        Ok(_) => (StatusCode::CREATED, Json(json!({ "status": "Success" }))).into_response(),
+        Ok(id) => (
+            StatusCode::CREATED,
+            Json(json!({ "status": "Success", "user_id": id })),
+        )
+            .into_response(),
         Err(e) => {
             error!("{e}");
             (
@@ -77,8 +80,14 @@ async fn register(
     }
 }
 
+async fn logout(cookies: Cookies) -> Response {
+    cookies.remove("token".into());
+    (StatusCode::OK, Json(json!({ "message": "Logout success" }))).into_response()
+}
+
 pub fn routes() -> Router<AppState<Engine>> {
     Router::new()
+        .route("/logout", get(logout))
         .route("/login", post(login))
         .route("/register", post(register))
 }

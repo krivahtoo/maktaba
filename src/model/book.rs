@@ -83,7 +83,7 @@ impl sea_query::Nullable for BorrowStatus {
     }
 }
 
-#[derive(Debug, Default, Serialize, FromRow, Fields)]
+#[derive(Debug, Default, Deserialize, FromRow, Fields)]
 pub struct BookCopyForCreate {
     pub book_id: i64,
     pub status: Option<BorrowStatus>,
@@ -114,6 +114,31 @@ impl Model for BookCopy {
 impl Book {
     pub async fn get(state: &AppState<super::Engine>, id: i64) -> Result<Book> {
         super::get::<Self, _>(state, id).await
+    }
+
+    pub async fn get_copy(
+        state: &AppState<super::Engine>,
+        copy_id: i64,
+        book_id: i64,
+    ) -> Result<BookCopy> {
+        let db = &state.pool;
+
+        let mut query = Query::select();
+        query
+            .from(BookCopy::table_ref())
+            .columns(Book::sea_idens())
+            .and_where(Expr::col(BookIden::Id).eq(copy_id))
+            .and_where(Expr::col(BookIden::BookId).eq(book_id));
+
+        let (sql, values) = query.build_sqlx(SqliteQueryBuilder);
+        let entity = query_as_with::<_, BookCopy, _>(&sql, values)
+            .fetch_optional(db)
+            .await?
+            .ok_or(super::error::Error::EntityNotFound {
+                entity: BookCopy::TABLE,
+                id: copy_id,
+            })?;
+        Ok(entity)
     }
 
     pub async fn create(state: &AppState<super::Engine>, book: BookForCreate) -> Result<i64> {
@@ -175,6 +200,30 @@ impl Book {
             1 => Ok(()),
             _ => Err(super::error::Error::CountFail),
         }
+    }
+
+    pub async fn list_copies(
+        state: &AppState<super::Engine>,
+        book_id: i64,
+    ) -> Result<Vec<BookCopy>> {
+        let db = &state.pool;
+
+        let mut query = Query::select();
+        query
+            .from(BookCopy::table_ref())
+            .columns(BookCopy::sea_idens())
+            .and_where(Expr::col(BookIden::BookId).eq(book_id));
+
+        let (sql, values) = query.build_sqlx(SqliteQueryBuilder);
+        let entities = query_as_with::<_, BookCopy, _>(&sql, values)
+            .fetch_all(db)
+            .await?;
+
+        Ok(entities)
+    }
+
+    pub async fn list(state: &AppState<super::Engine>) -> Result<Vec<Book>> {
+        super::list::<Self, _>(state).await
     }
 
     pub async fn delete(state: &AppState<super::Engine>, id: i64) -> Result<()> {

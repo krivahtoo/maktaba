@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     http::{header, StatusCode, Uri},
+    middleware,
     response::{Html, IntoResponse, Response},
     Router,
 };
@@ -13,15 +14,15 @@ use tokio::{net::TcpListener, signal};
 use tower_cookies::CookieManagerLayer;
 use tracing::{debug, info};
 
-use self::error::Result;
+use self::{error::Result, middlewares::log::request_logger};
 
 mod auth;
 mod error;
+mod extractors;
+mod middlewares;
 mod model;
 mod routes;
 mod state;
-mod extractors;
-mod middlewares;
 
 static INDEX_HTML: &str = "index.html";
 
@@ -44,6 +45,7 @@ async fn main() -> Result<()> {
         .merge(routes::routes(Arc::new(AppStateInner { pool, jwt_secret })))
         // handle all other routes from the frontend
         .fallback(static_handler)
+        .layer(middleware::from_fn(request_logger))
         .layer(CookieManagerLayer::new());
 
     // run our app with hyper, listening globally on port 3000

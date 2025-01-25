@@ -16,6 +16,7 @@ pub struct User {
     pub name: String,
     pub role: UserRole,
     pub username: String,
+    #[serde(skip_serializing)]
     pub password: String,
     pub email: String,
     pub phone: Option<String>,
@@ -152,6 +153,13 @@ impl User {
                 Some(hash(&password).map_err(|e| super::error::Error::Hash(e.to_string()))?);
         };
         super::update::<Self, _>(state, id, user).await
+    }
+
+    pub async fn list<E>(state: &AppState<super::Engine>) -> Result<Vec<E>>
+    where
+        E: UserBy,
+    {
+        super::list::<Self, _>(state).await
     }
 
     pub async fn delete(state: &AppState<super::Engine>, id: i64) -> Result<()> {
