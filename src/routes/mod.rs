@@ -7,32 +7,25 @@ use axum::{
 };
 use serde_json::json;
 
-use crate::{
-    auth::Claims,
-    middlewares::require_role,
-    model::{user::UserRole, Engine},
-    state::AppState,
-};
+use crate::{middlewares::require_login, model::Engine, state::AppState};
 
 mod auth;
 mod user;
 
-// basic handler that responds with a static string
+// basic handler that responds with a hello world json
 async fn hello_world() -> Response {
     (StatusCode::OK, Json(json!({ "hello": "Hello, World!" }))).into_response()
 }
 
 pub fn routes(state: AppState<Engine>) -> Router {
-    let hello = Router::new()
+    let protected_routes = Router::new()
         .route("/hello", get(hello_world))
-        .route_layer(middleware::from_fn(|claims: Claims, req, next| {
-            require_role(UserRole::Member, claims, req, next)
-        }));
+        .merge(user::routes())
+        .route_layer(middleware::from_fn(require_login));
 
     let api_routes = Router::new()
-        .merge(hello)
+        .merge(protected_routes)
         .merge(auth::routes())
-        .merge(user::routes())
         .fallback(not_found);
 
     Router::new()

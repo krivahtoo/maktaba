@@ -1,26 +1,11 @@
-use axum::{
-    body::Body, extract::Request, http::StatusCode, middleware::Next, response::Response, Json,
-};
-use serde_json::{json, Value};
-use tracing::debug;
+use axum::{body::Body, extract::Request, middleware::Next, response::Response};
 
-use crate::{auth::Claims, model::user::UserRole};
+use crate::auth::Claims;
 
-// Middleware for filtering user roles
-pub async fn require_role(
-    role: UserRole,
-    claims: Claims,
-    req: Request<Body>,
-    next: Next,
-) -> Result<Response, (StatusCode, Json<Value>)> {
-    debug!("role");
-    // Check if claims exist in the request extensions
-    if claims.role == role {
-        Ok(next.run(req).await)
-    } else {
-        Err((
-            StatusCode::UNAUTHORIZED,
-            Json(json!({ "error": "Unauthorized" })),
-        ))
-    }
+pub mod log;
+pub mod role;
+
+// Middleware for filtering loggedin users
+pub async fn require_login(_: Claims, req: Request<Body>, next: Next) -> Result<Response, ()> {
+    Ok(next.run(req).await)
 }
