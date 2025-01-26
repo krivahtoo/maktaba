@@ -177,7 +177,7 @@ impl Book {
         state: &AppState<super::Engine>,
         copy_id: i64,
         book_id: i64,
-        book: BookForUpdate,
+        book: BookCopyForUpdate,
     ) -> Result<()> {
         let db = &state.pool;
 

@@ -11,6 +11,7 @@ use crate::state::AppState;
 use error::Result;
 
 pub mod book;
+pub mod borrowing;
 pub mod error;
 pub mod user;
 
@@ -90,6 +91,28 @@ where
 
     let mut query = Query::select();
     query.from(M::table_ref()).columns(E::sea_idens());
+
+    let (sql, values) = query.build_sqlx(SqliteQueryBuilder);
+    let entities = query_as_with::<_, E, _>(&sql, values).fetch_all(db).await?;
+
+    Ok(entities)
+}
+
+async fn list_where<M, E, C, V>(state: &AppState<Engine>, col: C, val: V) -> Result<Vec<E>>
+where
+    M: Model,
+    E: for<'r> FromRow<'r, Row> + Unpin + Send,
+    E: HasSeaFields,
+    C: IntoColumnRef,
+    V: Into<SimpleExpr>,
+{
+    let db = &state.pool;
+
+    let mut query = Query::select();
+    query
+        .from(M::table_ref())
+        .columns(E::sea_idens())
+        .and_where(Expr::col(col).eq(val));
 
     let (sql, values) = query.build_sqlx(SqliteQueryBuilder);
     let entities = query_as_with::<_, E, _>(&sql, values).fetch_all(db).await?;
