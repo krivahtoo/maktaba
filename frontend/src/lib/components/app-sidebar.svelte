@@ -15,7 +15,7 @@
   const items = [
     {
       title: 'Home',
-      url: '#',
+      url: '/',
       icon: House
     },
     {
@@ -25,12 +25,12 @@
     },
     {
       title: 'Borowing',
-      url: '#',
+      url: '/borowing',
       icon: Activity
     },
     {
       title: 'Books',
-      url: '#',
+      url: '/books',
       icon: LibraryBig
     },
     {
@@ -79,7 +79,7 @@
           class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
           {#snippet child({ props })}
-            <a href="/" {...props}>
+            <a href="/settings" {...props}>
               <Tooltip.Provider>
                 <Tooltip.Root delayDuration={200}>
                   <Tooltip.Trigger>
