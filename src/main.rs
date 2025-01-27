@@ -1,21 +1,16 @@
 use std::sync::Arc;
 
-use axum::{
-    http::{header, StatusCode, Uri},
-    middleware,
-    response::{Html, IntoResponse, Response},
-    Router,
-};
+use axum::{middleware, Router};
 use listenfd::ListenFd;
-use rust_embed::Embed;
 use sqlx::SqlitePool;
 use state::AppStateInner;
-use tokio::{net::TcpListener, signal};
+use tokio::net::TcpListener;
 use tower_cookies::CookieManagerLayer;
 use tracing::{debug, info};
 
 use self::{error::Result, middlewares::log::request_logger};
 
+mod assets;
 mod auth;
 mod error;
 mod extractors;
@@ -23,12 +18,7 @@ mod middlewares;
 mod model;
 mod routes;
 mod state;
-
-static INDEX_HTML: &str = "index.html";
-
-#[derive(Embed)]
-#[folder = "frontend/build/"]
-struct Assets;
+mod utils;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -44,9 +34,10 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .merge(routes::routes(Arc::new(AppStateInner { pool, jwt_secret })))
         // handle all other routes from the frontend
-        .fallback(static_handler)
+        .fallback(assets::static_handler)
         .layer(middleware::from_fn(request_logger))
-        .layer(CookieManagerLayer::new());
+        .layer(CookieManagerLayer::new())
+        ;
 
     // run our app with hyper, listening globally on port 3000
     let mut listenfd = ListenFd::from_env();
@@ -63,69 +54,10 @@ async fn main() -> Result<()> {
     info!("Listening on port 3000");
     axum::serve(listener, app)
         .with_graceful_shutdown(async {
-            shutdown_signal().await;
+            utils::shutdown_signal().await;
             info!("Ctrl+C Received, Shutting down");
         })
         .await?;
     debug!("Bye");
     Ok(())
-}
-
-async fn static_handler(uri: Uri) -> impl IntoResponse {
-    let path = uri.path().trim_start_matches('/');
-
-    debug!("Got path {path}");
-
-    if path.is_empty() || path == INDEX_HTML {
-        return index_html().await;
-    }
-
-    match Assets::get(path) {
-        Some(content) => {
-            let mime = mime_guess::from_path(path).first_or_octet_stream();
-
-            ([(header::CONTENT_TYPE, mime.as_ref())], content.data).into_response()
-        }
-        None => {
-            if path.contains('.') {
-                return not_found().await;
-            }
-            index_html().await
-        }
-    }
-}
-
-async fn index_html() -> Response {
-    match Assets::get(INDEX_HTML) {
-        Some(content) => Html(content.data).into_response(),
-        None => not_found().await,
-    }
-}
-
-async fn not_found() -> Response {
-    (StatusCode::NOT_FOUND, "404").into_response()
-}
-
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
-    };
-
-    #[cfg(unix)]
-    let terminate = async {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
-            .recv()
-            .await;
-    };
-
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
-    }
 }

@@ -16,7 +16,6 @@ use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation}
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tower_cookies::Cookies;
-use tracing::debug;
 
 use crate::{
     error::{Error, Result},
@@ -58,10 +57,7 @@ where
         };
         let jwt_secret = std::env::var("JWT_SECRET").unwrap_or("secret".to_string());
         // Decode the user data
-        let claims = decode_jwt(&token, &jwt_secret).map_err(|e| {
-            debug!("{e}");
-            AuthError::InvalidToken
-        })?;
+        let claims = decode_jwt(&token, &jwt_secret).map_err(|_| AuthError::InvalidToken)?;
 
         Ok(claims)
     }
