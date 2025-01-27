@@ -38,7 +38,7 @@ Then visit http://localhost:5173
 Thank you for considering contributing to Stamon! Contributions are welcome.
 
 ## 👷 Contributors
-<a href="https://github.com/krivahtoo/stamon/graphs/contributors">
+<a href="https://github.com/krivahtoo/maktaba/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=krivahtoo/maktaba" alt="Contributors to krivahtoo/stamon" />
 </a>
 
