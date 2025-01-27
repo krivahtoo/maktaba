@@ -7,6 +7,7 @@
   import { Trigger } from '$lib/components/ui/sidebar/index.js';
   import * as Avatar from '$lib/components/ui/avatar/index.js';
   import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+    import { goto } from '$app/navigation';
 </script>
 
 <header
@@ -25,10 +26,10 @@
     </svg>
     <ul>
       <li aria-current={page.url.pathname.startsWith('/register') ? 'page' : undefined}>
-        <a href="/register">Register</a>
+        <a href="/register">Borrow</a>
       </li>
       <li aria-current={page.url.pathname.startsWith('/login') ? 'page' : undefined}>
-        <a href="/login">Login</a>
+        <a href="/login">Return</a>
       </li>
     </ul>
     <svg viewBox="0 0 2 3" aria-hidden="true">
@@ -47,8 +48,8 @@
       <DropdownMenu.Content class="w-56" align="end">
         <DropdownMenu.Label class="font-normal">
           <div class="flex flex-col space-y-1">
-            <p class="text-sm font-medium leading-none">shadcn</p>
-            <p class="text-xs leading-none text-muted-foreground">m@example.com</p>
+            <p class="text-sm font-medium leading-none">krivah</p>
+            <p class="text-xs leading-none text-muted-foreground">krivahtoo@github.com</p>
           </div>
         </DropdownMenu.Label>
         <DropdownMenu.Separator />
@@ -76,7 +77,7 @@
           </DropdownMenu.Item>
         </DropdownMenu.Group>
         <DropdownMenu.Separator />
-        <DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => goto('/login')}>
           Log out
           <DropdownMenu.Shortcut>⇧⌘Q</DropdownMenu.Shortcut>
         </DropdownMenu.Item>

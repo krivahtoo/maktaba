@@ -46,8 +46,8 @@
 
     <Card.Root class="col-span-3">
       <Card.Header>
-        <Card.Title>Recent Sales</Card.Title>
-        <Card.Description>You made 265 sales this month.</Card.Description>
+        <Card.Title>Trending</Card.Title>
+        <Card.Description>Most borrowed books this month.</Card.Description>
       </Card.Header>
       <Card.Content>
         <div class="space-y-8">
@@ -57,38 +57,38 @@
             <!-- 	<Avatar.Fallback>OM</Avatar.Fallback> -->
             <!-- </Avatar.Root> -->
             <div class="ml-4 space-y-1">
-              <p class="text-sm font-medium leading-none">Olivia Martin</p>
-              <p class="text-sm text-muted-foreground">olivia.martin@email.com</p>
+              <p class="text-sm font-medium leading-none">The Old</p>
+              <p class="text-sm text-muted-foreground">Grand Publishers</p>
             </div>
-            <div class="ml-auto font-medium">+$1,999.00</div>
+            <div class="ml-auto font-medium">46 copies</div>
           </div>
           <div class="flex items-center">
             <div class="ml-4 space-y-1">
               <p class="text-sm font-medium leading-none">Jackson Lee</p>
-              <p class="text-sm text-muted-foreground">jackson.lee@email.com</p>
+              <p class="text-sm text-muted-foreground">JM</p>
             </div>
-            <div class="ml-auto font-medium">+$39.00</div>
+            <div class="ml-auto font-medium">39 copies</div>
           </div>
           <div class="flex items-center">
             <div class="ml-4 space-y-1">
               <p class="text-sm font-medium leading-none">Isabella Nguyen</p>
               <p class="text-sm text-muted-foreground">isabella.nguyen@email.com</p>
             </div>
-            <div class="ml-auto font-medium">+$299.00</div>
+            <div class="ml-auto font-medium">29 copies</div>
           </div>
           <div class="flex items-center">
             <div class="ml-4 space-y-1">
               <p class="text-sm font-medium leading-none">William Kim</p>
               <p class="text-sm text-muted-foreground">will@email.com</p>
             </div>
-            <div class="ml-auto font-medium">+$99.00</div>
+            <div class="ml-auto font-medium">25 copies</div>
           </div>
           <div class="flex items-center">
             <div class="ml-4 space-y-1">
               <p class="text-sm font-medium leading-none">Sofia Davis</p>
               <p class="text-sm text-muted-foreground">sofia.davis@email.com</p>
             </div>
-            <div class="ml-auto font-medium">+$39.00</div>
+            <div class="ml-auto font-medium">20 copies</div>
           </div>
         </div>
       </Card.Content>
