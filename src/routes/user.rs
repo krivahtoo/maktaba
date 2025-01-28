@@ -11,6 +11,7 @@ use serde_json::json;
 use tracing::error;
 
 use crate::{
+    auth::Claims,
     extractors::{json::Json, path::Path},
     middlewares::role::{require_admin_role, require_issuer_admin_role},
     model::{
@@ -27,6 +28,23 @@ struct PathParam {
 
 async fn get_user(State(state): State<AppState<Engine>>, Path(param): Path<PathParam>) -> Response {
     match User::get::<User>(&state, param.user_id).await {
+        Ok(user) => (StatusCode::OK, Json(json!({ "user": user }))).into_response(),
+        Err(e) => {
+            error!("{e}");
+            (
+                StatusCode::NOT_FOUND,
+                Json(json!({ "error": "User not found" })),
+            )
+                .into_response()
+        }
+    }
+}
+
+async fn get_current_user(
+    Claims { user_id, .. }: Claims,
+    State(state): State<AppState<Engine>>,
+) -> Response {
+    match User::get::<User>(&state, user_id).await {
         Ok(user) => (StatusCode::OK, Json(json!({ "user": user }))).into_response(),
         Err(e) => {
             error!("{e}");
@@ -76,9 +94,13 @@ pub fn routes() -> Router<AppState<Engine>> {
         .route("/user/{user_id}", put(update_user))
         .route_layer(middleware::from_fn(require_admin_role));
 
-    Router::new()
-        .route("/user", get(get_users))
-        .merge(admin_routes)
+    let restricted = Router::new()
+        .route("/users", get(get_users))
         .route("/user/{user_id}", get(get_user))
-        .route_layer(middleware::from_fn(require_issuer_admin_role))
+        .merge(admin_routes)
+        .route_layer(middleware::from_fn(require_issuer_admin_role));
+
+    Router::new()
+        .merge(restricted)
+        .route("/user", get(get_current_user))
 }
