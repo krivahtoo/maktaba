@@ -1,9 +1,9 @@
 <script>
-  import { Toaster } from 'svelte-sonner';
   import { ModeWatcher } from 'mode-watcher';
 
   import '../app.css';
   import { onNavigate } from '$app/navigation';
+  import { Toaster } from '$lib/components/ui/sonner/index.js';
 
   onNavigate((navigation) => {
     if (!document.startViewTransition) return;
