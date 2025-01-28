@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
-use axum::{middleware, Router};
+use axum::{http::HeaderValue, middleware, Router};
 use listenfd::ListenFd;
 use sqlx::SqlitePool;
 use state::AppStateInner;
 use tokio::net::TcpListener;
 use tower_cookies::CookieManagerLayer;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::{debug, info};
 
 use self::{error::Result, middlewares::log::request_logger};
@@ -36,8 +37,14 @@ async fn main() -> Result<()> {
         // handle all other routes from the frontend
         .fallback(assets::static_handler)
         .layer(middleware::from_fn(request_logger))
-        .layer(CookieManagerLayer::new())
-        ;
+        .layer((
+            CookieManagerLayer::new(),
+            #[cfg(debug_assertions)]
+            CorsLayer::new()
+                .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
+                .allow_methods(Any)
+                .allow_headers(Any),
+        ));
 
     // run our app with hyper, listening globally on port 3000
     let mut listenfd = ListenFd::from_env();
