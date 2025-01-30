@@ -2,8 +2,12 @@
   import { superForm, defaults } from 'sveltekit-superforms';
   import { zod } from 'sveltekit-superforms/adapters';
   import LoaderCircle from 'lucide-svelte/icons/loader-circle';
+  import { jwtDecode } from 'jwt-decode';
+  import { toast } from 'svelte-sonner';
 
   import { goto } from '$app/navigation';
+  import { cfetch } from '$lib/utils.js';
+  import { auth } from '$lib/state/auth.svelte.js';
   import { loginSchema } from '$lib/schema';
   import AuthAlert from '$lib/components/auth-alert.svelte';
   import * as Card from '$lib/components/ui/card/index.js';
@@ -11,6 +15,7 @@
   import { Input } from '$lib/components/ui/input/index.js';
   import { Button } from '$lib/components/ui/button/index.js';
 
+  /** @type {boolean} */
   let loading = $state(false);
 
   /**
@@ -26,20 +31,58 @@
     SPA: true,
     validators: zod(loginSchema),
     multipleSubmits: 'prevent',
-    onUpdate({ form }) {
+    async onUpdate({ form }) {
       if (!form.valid) return;
       msg = undefined;
       loading = true;
-      // TODO: Call our API
-      return setTimeout(() => {
+      try {
+        const res = await cfetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify($formData)
+        });
+        console.log(res);
+        // console.log(res);
+        if (res.ok) {
+          let d = await res.json();
+          console.log(jwtDecode(d.token));
+          auth.token = d.token;
+          let ures = await cfetch('/user', { credentials: 'same-origin' });
+          if (ures.ok) {
+            let data = await ures.json();
+            auth.user = data.user;
+            goto('/');
+          } else {
+            let data = await ures.json();
+            msg = {
+              title: 'Error',
+              message: data.error,
+              error: true
+            };
+          }
+        } else {
+          let data = await res.json();
+          msg = {
+            title: 'Error',
+            message: data.error,
+            error: true
+          };
+        }
+      } catch (e) {
+        // console.log(e);
+        toast.error('Network error', {
+          description:
+            'Failed to connect to server. Please check your internet connection and try again.'
+        });
         msg = {
           title: 'Error',
-          message: 'Username or password is incorrect',
+          message: `${e}`,
           error: true
         };
+      } finally {
+        $formData.password = '';
         loading = false;
-        goto('/');
-      }, 2000);
+      }
     }
   });
 
