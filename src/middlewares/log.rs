@@ -10,6 +10,11 @@ pub async fn request_logger(req: Request<Body>, next: Next) -> Response {
     let method = req.method().clone();
     let uri = req.uri().clone();
 
+    // Ignore static js/css assets
+    if uri.path().starts_with("/_app") {
+        return next.run(req).await
+    }
+
     // Proceed to the next middleware or handler
     let response = next.run(req).await;
 
