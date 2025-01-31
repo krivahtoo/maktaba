@@ -57,7 +57,11 @@ where
         };
         let jwt_secret = std::env::var("JWT_SECRET").unwrap_or("secret".to_string());
         // Decode the user data
-        let claims = decode_jwt(&token, &jwt_secret).map_err(|_| AuthError::InvalidToken)?;
+        use jsonwebtoken::errors::ErrorKind as E;
+        let claims = decode_jwt(&token, &jwt_secret).map_err(|e| match e.kind() {
+            E::ExpiredSignature => AuthError::ExpiredToken,
+            _ => AuthError::InvalidToken,
+        })?;
 
         Ok(claims)
     }
@@ -67,6 +71,7 @@ where
 pub enum AuthError {
     MissingCredentials,
     InvalidToken,
+    ExpiredToken,
 }
 
 impl IntoResponse for AuthError {
@@ -74,6 +79,7 @@ impl IntoResponse for AuthError {
         let (status, error_message) = match self {
             AuthError::MissingCredentials => (StatusCode::FORBIDDEN, "Missing credentials"),
             AuthError::InvalidToken => (StatusCode::FORBIDDEN, "Invalid token"),
+            AuthError::ExpiredToken => (StatusCode::FORBIDDEN, "Expired token. Please login again"),
         };
         let body = Json(json!({
             "error": error_message,
@@ -91,7 +97,10 @@ pub fn generate_jwt(claims: &Claims, jwt_secret: &str) -> Result<String> {
     Ok(token)
 }
 
-pub fn decode_jwt(token: &str, jwt_secret: &str) -> Result<Claims> {
+pub fn decode_jwt(
+    token: &str,
+    jwt_secret: &str,
+) -> core::result::Result<Claims, jsonwebtoken::errors::Error> {
     let data = decode::<Claims>(
         token,
         &DecodingKey::from_secret(jwt_secret.as_bytes()),
