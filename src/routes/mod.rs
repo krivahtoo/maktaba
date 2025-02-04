@@ -1,4 +1,5 @@
 use axum::{
+    extract::State,
     http::StatusCode,
     middleware,
     response::{IntoResponse, Response},
@@ -6,8 +7,13 @@ use axum::{
     Json, Router,
 };
 use serde_json::json;
+use tracing::error;
 
-use crate::{middlewares::require_login, model::Engine, state::AppState};
+use crate::{
+    middlewares::require_login,
+    model::{user::User, Engine},
+    state::AppState,
+};
 
 mod auth;
 mod book;
@@ -16,6 +22,38 @@ mod user;
 // basic handler that responds with a hello world json
 async fn hello_world() -> Response {
     (StatusCode::OK, Json(json!({ "hello": "Hello, World!" }))).into_response()
+}
+
+async fn user_exists(State(state): State<AppState<Engine>>) -> Response {
+    match User::count(&state).await {
+        Ok(count) => {
+            if count > 0 {
+                (
+                    StatusCode::OK,
+                    Json(json!({
+                        "status": true,
+                        "message": "Users exists",
+                        "count": count
+                    })),
+                )
+                    .into_response()
+            } else {
+                (
+                    StatusCode::OK,
+                    Json(json!({ "status": false, "message": "No user" })),
+                )
+                    .into_response()
+            }
+        }
+        Err(e) => {
+            error!("{e}");
+            (
+                StatusCode::NOT_FOUND,
+                Json(json!({ "error": "User not found" })),
+            )
+                .into_response()
+        }
+    }
 }
 
 pub fn routes(state: AppState<Engine>) -> Router {
@@ -28,6 +66,7 @@ pub fn routes(state: AppState<Engine>) -> Router {
     let api_routes = Router::new()
         .merge(protected_routes)
         .merge(auth::routes())
+        .route("/users/exists", get(user_exists))
         .fallback(not_found);
 
     Router::new()

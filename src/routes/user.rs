@@ -77,7 +77,7 @@ async fn update_user(
     Json(user): Json<UserForUpdate>,
 ) -> Response {
     match User::update(&state, param.user_id, user).await {
-        Ok(users) => (StatusCode::OK, Json(json!({ "users": users }))).into_response(),
+        Ok(_) => (StatusCode::OK, Json(json!({ "message": "User updated" }))).into_response(),
         Err(e) => {
             error!("{e}");
             (

@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use modql::field::{Fields, HasSeaFields, SeaFieldValue};
-use sea_query::{Expr, Iden, Query, SqliteQueryBuilder};
+use sea_query::{Expr, Iden, Query, SimpleExpr, SqliteQueryBuilder};
 use sea_query_binder::SqlxBinder;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as_with, FromRow, Type};
@@ -160,6 +160,22 @@ impl User {
         E: UserBy,
     {
         super::list::<Self, _>(state).await
+    }
+
+    pub async fn count(state: &AppState<super::Engine>) -> Result<i64> {
+        let db = &state.pool;
+
+        let mut query = Query::select();
+        query
+            .expr(Expr::expr(Expr::value("*")).count())
+            .from(Self::table_ref());
+
+        let (sql, values) = query.build_sqlx(SqliteQueryBuilder);
+        let (count,) = query_as_with::<_, (i64,), _>(&sql, values)
+            .fetch_one(db)
+            .await?;
+
+        Ok(count)
     }
 
     pub async fn delete(state: &AppState<super::Engine>, id: i64) -> Result<()> {
