@@ -9,6 +9,7 @@ CREATE TABLE Users (
     photo TEXT,
     address TEXT,
     role TEXT CHECK(role IN ('member', 'issuer', 'admin')) DEFAULT 'member',
+    updated_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -18,8 +19,11 @@ CREATE TABLE Books (
     title TEXT NOT NULL,
     author TEXT NOT NULL,
     isbn TEXT UNIQUE NOT NULL,
+    publisher TEXT,
+    photo TEXT,
     category TEXT,
     year INTEGER,
+    updated_at TIMESTAMP,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -29,6 +33,7 @@ CREATE TABLE BookCopies (
     book_id INTEGER NOT NULL,
     status TEXT CHECK(status IN ('available', 'borrowed', 'reserved')) DEFAULT 'available',
     location TEXT,
+    updated_at TIMESTAMP,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (book_id, id),
     FOREIGN KEY (book_id) REFERENCES Books(id) ON DELETE CASCADE
@@ -41,8 +46,10 @@ CREATE TABLE Borrowing (
     copy_id INTEGER NOT NULL,
     book_id INTEGER NOT NULL,
     borrow_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    due_date DATE NOT NULL,
     return_date DATE,
     status TEXT CHECK(status IN ('borrowed', 'returned', 'late')) DEFAULT 'borrowed',
+    updated_at TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (book_id, copy_id) REFERENCES BookCopies(book_id, id) ON DELETE CASCADE
 );
@@ -54,13 +61,15 @@ CREATE TABLE Fines (
     fine_amount REAL NOT NULL,
     paid BOOLEAN DEFAULT FALSE,
     paid_date DATE,
+    updated_at TIMESTAMP,
     FOREIGN KEY (transaction_id) REFERENCES Borrowing(id) ON DELETE CASCADE
 );
 
 -- Table for storing categories
 CREATE TABLE Categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL
+    name TEXT UNIQUE NOT NULL,
+    updated_at TIMESTAMP
 );
 
 -- Associative table for book-category relationships (many-to-many)
@@ -79,6 +88,7 @@ CREATE TABLE Reviews (
     book_id INTEGER NOT NULL,
     rating INTEGER CHECK(rating BETWEEN 1 AND 5),
     review_text TEXT,
+    updated_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (book_id) REFERENCES Books(id) ON DELETE CASCADE
@@ -92,6 +102,7 @@ CREATE TABLE Reservations (
     user_id INTEGER NOT NULL,
     reservation_date DATE NOT NULL DEFAULT CURRENT_DATE,
     status TEXT CHECK(status IN ('active', 'cancelled', 'fulfilled')) DEFAULT 'active',
+    updated_at TIMESTAMP,
     FOREIGN KEY (book_id, copy_id) REFERENCES BookCopies(book_id, id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );

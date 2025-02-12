@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 use modql::field::{Fields, HasSeaFields};
 use sea_query::{Expr, Iden, Query, SqliteQueryBuilder};
 use sea_query_binder::SqlxBinder;
@@ -16,8 +16,10 @@ pub struct Borrowing {
     pub book_id: i64,
     pub copy_id: i64,
     pub borrow_date: NaiveDate,
+    pub due_date: NaiveDate,
     pub return_date: Option<NaiveDate>,
     pub status: BorrowingStatus,
+    pub updated_at: Option<NaiveDateTime>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize, Type)]
@@ -51,12 +53,14 @@ pub struct BorrowingForCreate {
     pub user_id: i64,
     pub book_id: i64,
     pub copy_id: i64,
+    pub due_date: NaiveDate,
 }
 
 #[derive(Debug, Deserialize, FromRow, Fields)]
 pub struct BorrowingForUpdate {
     pub return_date: Option<NaiveDate>,
     pub status: Option<BorrowingStatus>,
+    pub due_date: Option<NaiveDate>,
 }
 
 #[derive(Iden)]
@@ -76,7 +80,10 @@ impl Borrowing {
         super::get::<Self, _>(state, id).await
     }
 
-    pub async fn create(state: &AppState<super::Engine>, borrowing: BorrowingForCreate) -> Result<i64> {
+    pub async fn create(
+        state: &AppState<super::Engine>,
+        borrowing: BorrowingForCreate,
+    ) -> Result<i64> {
         super::create::<Self, _>(state, borrowing).await
     }
 

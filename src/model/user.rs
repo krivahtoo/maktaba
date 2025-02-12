@@ -22,6 +22,7 @@ pub struct User {
     pub phone: Option<String>,
     pub photo: Option<String>,
     pub address: Option<String>,
+    pub updated_at: Option<NaiveDateTime>,
     pub created_at: NaiveDateTime,
 }
 
@@ -51,7 +52,7 @@ impl sea_query::Nullable for UserRole {
     }
 }
 
-#[derive(Debug, Deserialize, Fields)]
+#[derive(Debug, Default, Deserialize, Fields)]
 pub struct UserForCreate {
     pub name: String,
     #[serde(default)]
@@ -64,7 +65,7 @@ pub struct UserForCreate {
     pub address: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Fields)]
+#[derive(Debug, Default, Deserialize, Fields)]
 pub struct UserForUpdate {
     pub name: Option<String>,
     #[serde(skip_deserializing)]

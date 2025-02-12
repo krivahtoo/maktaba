@@ -19,7 +19,8 @@ pub struct Book {
     pub category: Option<String>,
     pub year: Option<i32>,
     pub photo: Option<String>,
-    pub created_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>,
+    pub added_at: NaiveDateTime,
 }
 
 #[derive(Debug, Deserialize, FromRow, Fields)]
@@ -54,6 +55,7 @@ pub struct BookCopy {
     pub book_id: i64,
     pub status: Option<BorrowStatus>,
     pub location: Option<String>,
+    pub updated_at: Option<NaiveDateTime>,
     pub added_at: NaiveDateTime,
 }
 
