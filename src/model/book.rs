@@ -98,6 +98,11 @@ pub struct BookCopyForUpdate {
     pub location: Option<String>,
 }
 
+pub struct BookCategory {
+    pub book_id: i64,
+    pub category_id: i64,
+}
+
 #[derive(Iden)]
 enum BookIden {
     Id,
@@ -111,6 +116,10 @@ impl Model for Book {
 
 impl Model for BookCopy {
     const TABLE: &'static str = "BookCopies";
+}
+
+impl Model for BookCategory {
+    const TABLE: &'static str = "BookCategories";
 }
 
 impl Book {

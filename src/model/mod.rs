@@ -1,8 +1,9 @@
 #![allow(unused)] // TODO: remove
 
-
 use modql::{field::HasSeaFields, SIden};
-use sea_query::{Expr, Iden, IntoIden, Query, SqliteQueryBuilder, TableRef};
+use sea_query::{
+    Expr, Iden, IntoColumnRef, IntoIden, Query, SimpleExpr, SqliteQueryBuilder, TableRef,
+};
 use sea_query_binder::SqlxBinder;
 use sqlx::{query_as_with, query_with, Database, FromRow};
 
@@ -12,7 +13,11 @@ use error::Result;
 
 pub mod book;
 pub mod borrowing;
+pub mod category;
 pub mod error;
+pub mod fine;
+pub mod reservation;
+pub mod review;
 pub mod user;
 
 pub type Engine = sqlx::Sqlite;

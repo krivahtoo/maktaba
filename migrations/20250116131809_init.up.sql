@@ -101,7 +101,7 @@ CREATE TABLE Reservations (
     book_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     reservation_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    status TEXT CHECK(status IN ('active', 'cancelled', 'fulfilled')) DEFAULT 'active',
+    status TEXT CHECK(status IN ('pending','active', 'expired', 'cancelled', 'declined')) DEFAULT 'pending',
     updated_at TIMESTAMP,
     FOREIGN KEY (book_id, copy_id) REFERENCES BookCopies(book_id, id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
