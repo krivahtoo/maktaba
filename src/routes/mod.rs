@@ -17,6 +17,11 @@ use crate::{
 
 mod auth;
 mod book;
+mod borrowing;
+mod category;
+mod fine;
+mod reservation;
+mod review;
 mod user;
 
 // basic handler that responds with a hello world json
@@ -61,6 +66,11 @@ pub fn routes(state: AppState<Engine>) -> Router {
         .route("/hello", get(hello_world))
         .merge(user::routes())
         .merge(book::routes())
+        .merge(borrowing::routes())
+        .merge(category::routes())
+        .merge(fine::routes())
+        .merge(review::routes())
+        .merge(reservation::routes())
         .route_layer(middleware::from_fn(require_login));
 
     let api_routes = Router::new()
