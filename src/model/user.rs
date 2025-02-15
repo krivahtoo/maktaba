@@ -183,3 +183,154 @@ impl User {
         super::delete::<Self>(state, id).await
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::sync::Arc;
+
+    use chrono::Utc;
+    use sqlx::SqlitePool;
+    use tokio::time::{self, Duration};
+
+    use crate::state::AppStateInner;
+
+    use super::*;
+
+    #[sqlx::test(fixtures("users"))]
+    fn getting_user_by_id(pool: SqlitePool) -> Result<()> {
+        let state = Arc::new(AppStateInner {
+            pool,
+            jwt_secret: "secret".to_string(),
+        });
+        let user: UserForLogin = User::get(&state, 1).await?;
+
+        assert_eq!(&user.username, "johndoe");
+        Ok(())
+    }
+
+    #[sqlx::test(fixtures("users"))]
+    #[should_panic]
+    fn getting_user_by_id_fail(pool: SqlitePool) {
+        let state = Arc::new(AppStateInner {
+            pool,
+            jwt_secret: "secret".to_string(),
+        });
+        let _: UserForLogin = User::get(&state, 10).await.unwrap();
+    }
+
+    #[sqlx::test(fixtures("users"))]
+    fn getting_user_by_username(pool: SqlitePool) -> Result<()> {
+        let state = Arc::new(AppStateInner {
+            pool,
+            jwt_secret: "secret".to_string(),
+        });
+        let user: Option<UserForLogin> =
+            User::get_by_username(&state, "johndoe".to_string()).await?;
+
+        assert!(&user.is_some());
+        Ok(())
+    }
+
+    #[sqlx::test(fixtures("users"))]
+    fn getting_user_by_username_fail(pool: SqlitePool) -> Result<()> {
+        let state = Arc::new(AppStateInner {
+            pool,
+            jwt_secret: "secret".to_string(),
+        });
+        let user: Option<UserForLogin> = User::get_by_username(&state, "jdoe".to_string()).await?;
+
+        assert!(&user.is_none());
+        Ok(())
+    }
+
+    #[sqlx::test]
+    fn create_user(pool: SqlitePool) -> Result<()> {
+        let state = Arc::new(AppStateInner {
+            pool,
+            jwt_secret: "secret".to_string(),
+        });
+
+        let user = UserForCreate {
+            name: "John Doe".to_string(),
+            role: UserRole::Member,
+            username: "jdoe".to_string(),
+            password: "password".to_string(),
+            email: "B0oDZ@example.com".to_string(),
+            ..Default::default()
+        };
+        let id = User::create(&state, user).await?;
+
+        assert_eq!(id, 1);
+        Ok(())
+    }
+
+    #[sqlx::test(fixtures("users"))]
+    #[should_panic]
+    fn create_user_email_fail(pool: SqlitePool) {
+        let state = Arc::new(AppStateInner {
+            pool,
+            jwt_secret: "secret".to_string(),
+        });
+
+        let user = UserForCreate {
+            name: "John Doe".to_string(),
+            role: UserRole::Member,
+            username: "jdoe".to_string(),
+            password: "password".to_string(),
+            email: "johndoe@localhost".to_string(),
+            ..Default::default()
+        };
+        let _ = User::create(&state, user).await.unwrap();
+    }
+
+    #[sqlx::test(fixtures("users"))]
+    #[should_panic]
+    fn create_user_username_fail(pool: SqlitePool) {
+        let state = Arc::new(AppStateInner {
+            pool,
+            jwt_secret: "secret".to_string(),
+        });
+
+        let user = UserForCreate {
+            name: "John Doe".to_string(),
+            role: UserRole::Member,
+            username: "johndoe".to_string(),
+            password: "password".to_string(),
+            email: "B0oDZ@example.com".to_string(),
+            ..Default::default()
+        };
+        let _ = User::create(&state, user).await.unwrap();
+    }
+
+    #[sqlx::test(fixtures("users"))]
+    fn update_user(pool: SqlitePool) -> Result<()> {
+        let state = Arc::new(AppStateInner {
+            pool,
+            jwt_secret: "secret".to_string(),
+        });
+
+        let before = Utc::now().naive_utc();
+        dbg!(&before);
+
+        // Add significant delay
+        time::sleep(Duration::from_millis(800)).await;
+
+        let user = UserForUpdate {
+            username: Some("j.doe".to_string()),
+            ..Default::default()
+        };
+        User::update(&state, 1, user).await?;
+
+        let after = Utc::now().naive_utc();
+        dbg!(&after);
+
+        let user: User = User::get(&state, 1).await?;
+
+        dbg!(&user);
+
+        assert_eq!(&user.username, "j.doe");
+        assert!(before < user.updated_at.unwrap());
+        assert!(after > user.updated_at.unwrap());
+        Ok(())
+    }
+}

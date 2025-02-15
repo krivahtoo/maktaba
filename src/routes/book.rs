@@ -281,9 +281,7 @@ async fn get_reviews(
 
 pub fn routes() -> Router<AppState<Engine>> {
     let admin_routes = Router::new()
-        .route("/book", post(add_book))
         .route("/book/{book_id}", put(update_book))
-        .route("/book/{book_id}/copy", post(add_book_copy))
         .route("/book/{book_id}/copy/{copy_id}", put(update_book_copy))
         .route_layer(middleware::from_fn(require_admin_role));
 

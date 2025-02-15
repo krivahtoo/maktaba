@@ -241,3 +241,28 @@ impl Book {
         super::delete::<Self>(state, id).await
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::sync::Arc;
+
+    use sqlx::SqlitePool;
+
+    use crate::state::AppStateInner;
+
+    use super::*;
+
+    #[sqlx::test(fixtures("books"))]
+    fn getting_book_by_id(pool: SqlitePool) -> Result<()> {
+        let state = Arc::new(AppStateInner {
+            pool,
+            jwt_secret: "secret".to_string(),
+        });
+
+        let book = Book::get(&state, 1).await?;
+
+        assert_eq!(&book.title, "Book 1");
+
+        Ok(())
+    }
+}
