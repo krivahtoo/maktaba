@@ -27,7 +27,14 @@ export const registerSchema = z
         message: 'Name must contain at least 2 characters'
       })
       .max(255),
-    image: z
+    email: z
+      .string()
+      .email({ message: 'Please provide a valid email address.' })
+      .min(2, {
+        message: 'Name must contain at least 2 characters'
+      })
+      .max(255),
+    photo: z
       .instanceof(File, { message: 'Please upload a file.' })
       .refine((f) => f.size < 2_000_000, 'Max 2 MB upload size.')
       .refine(

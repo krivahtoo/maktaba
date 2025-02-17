@@ -10,6 +10,8 @@
   import * as Form from '$lib/components/ui/form/index.js';
   import { Input, FileInput } from '$lib/components/ui/input/index.js';
   import { Button } from '$lib/components/ui/button/index.js';
+  import { cfetch } from '@/utils.js';
+  import { toast } from 'svelte-sonner';
 
   let loading = $state(false);
 
@@ -26,22 +28,52 @@
     SPA: true,
     validators: zod(registerSchema),
     multipleSubmits: 'prevent',
-    onUpdate({ form }) {
+    async onUpdate({ form }) {
       console.log(form);
       // Form validation
       if (!form.valid) return;
       msg = undefined;
       loading = true;
       // TODO: Call the API with form.data, await the result and update form
-      return setTimeout(() => {
+      try {
+        const res = await cfetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify($formData)
+        });
+        console.log(res);
+        // console.log(res);
+        if (res.ok) {
+          let d = await res.json();
+          msg = {
+            title: 'Success',
+            message: 'You are now registered',
+            error: false
+          };
+          goto('/login');
+        } else {
+          let data = await res.json();
+          msg = {
+            title: 'Error',
+            message: data.error,
+            error: true
+          };
+        }
+      } catch (e) {
+        // console.log(e);
+        toast.error('Network error', {
+          description:
+            'Failed to connect to server. Please check your internet connection and try again.'
+        });
         msg = {
-          title: 'Success',
-          message: 'You are now registered',
-          error: false
+          title: 'Error',
+          message: `${e}`,
+          error: true
         };
+      } finally {
+        $formData.password = '';
         loading = false;
-        goto('/login');
-      }, 2000);
+      }
     }
   });
 
@@ -92,7 +124,21 @@
           <Form.FieldErrors />
         </Form.Field>
       </div>
-      <Form.Field {form} name="image">
+      <Form.Field {form} name="email">
+        <Form.Control>
+          {#snippet children({ props })}
+            <Form.Label class="">Email</Form.Label>
+            <Input
+              {...props}
+              type="text"
+              bind:value={$formData.email}
+              placeholder="Enter your email..."
+            />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
+      <Form.Field {form} name="photo">
         <Form.Control>
           {#snippet children({ props })}
             <Form.Label>Profile Photo</Form.Label>
